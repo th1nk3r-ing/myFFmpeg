@@ -91,3 +91,11 @@
 /tools/seek_print
 /tools/uncoded_frame
 /tools/zmqsend
+/src
+/mapfile
+/tools/python/__pycache__/
+compile_commands.json
+/.cache/
+/.vscode/
+/.clangd
+>>>>>>> d3c09a7ee9 (add vscode 配置(clangd & 断点调试))
