@@ -1,0 +1,32 @@
+{
+    // 使用 IntelliSense 了解相关属性。
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ffmpeg_g test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ffmpeg_g",
+                "args": ["--version"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        },
+        {
+            "name": "demuxing_decoding_g",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/doc/examples/demuxing_decoding_g",
+            "args": ["/Users/think3r/Movies/1_video/FIFA/抖音/out_500.ts", "/tmp/outVideo.es", "/tmp/outAudio.es"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        }
+    ]
+}

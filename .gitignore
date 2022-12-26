@@ -41,3 +41,7 @@
 /src
 /mapfile
 /tools/python/__pycache__/
+compile_commands.json
+/.cache/
+/.vscode/
+/.clangd
