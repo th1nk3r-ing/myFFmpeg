@@ -96,6 +96,14 @@
 /tools/python/__pycache__/
 compile_commands.json
 /.cache/
-/.vscode/
 /.clangd
->>>>>>> d3c09a7ee9 (add vscode 配置(clangd & 断点调试))
+/doc/examples/avio_read_callback
+/doc/examples/decode_filter_audio
+/doc/examples/decode_filter_video
+/doc/examples/demux_decode
+/doc/examples/mux
+/doc/examples/remux
+/doc/examples/resample_audio
+/doc/examples/scale_video
+/doc/examples/show_metadata
+/doc/examples/transcode
