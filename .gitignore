@@ -41,3 +41,16 @@
 /src
 /mapfile
 /tools/python/__pycache__/
+/.cache/
+/compile_commands.json
+/doc/examples/avio_read_callback
+/doc/examples/decode_filter_audio
+/doc/examples/decode_filter_video
+/doc/examples/demux_decode
+/doc/examples/mux
+/doc/examples/remux
+/doc/examples/resample_audio
+/doc/examples/scale_video
+/doc/examples/show_metadata
+/doc/examples/transcode
+
