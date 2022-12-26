@@ -1,0 +1,63 @@
+{
+    // 使用 IntelliSense 了解相关属性。
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    // TODO: 查看 mac 上编译的是 GCC(GDB) 还是 clang(lldb)
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ffmpeg_g test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ffmpeg_g",
+                "args": ["-version"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb",
+            },
+            "osx": {
+                "MIMode": "lldb",
+                // "miDebuggerPath": "/usr/bin/lldb"
+            }
+        },
+        {
+            "name": "ffplay",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ffplay_g",
+                "args": ["SpaceX-Falcon-Heavy-Elon-Musk's-Engineering-Masterpiece-[sX1Y2JMK6g8].mp4"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb",
+                "args": ["/home/th1nk3r/Movies/spaceX.mp4"],
+                // "args": ["/home/th1nk3r/Movies/spaceX.ts"],
+            },
+            "osx": {
+                "MIMode": "lldb",
+                // "miDebuggerPath": "/usr/local/bin/gdb",
+                "args": ["/Users/think3r/Movies/1_video/out_mtk_stuck.ts"],
+                // "args": ["/Users/think3r/Movies/youtube/SpaceX-Falcon-Heavy-Elon-Musk's-Engineering-Masterpiece-[sX1Y2JMK6g8].mp4"],
+            }
+        },
+        {
+            "name": "demuxing_decoding_g",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/doc/examples/demuxing_decoding_g",
+            "args": ["/Users/think3r/Movies/1_video/FIFA/抖音/out_500.ts", "/tmp/outVideo.es", "/tmp/outAudio.es"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        }
+    ]
+}
