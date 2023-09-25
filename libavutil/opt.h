@@ -251,6 +251,12 @@ enum AVOptionType{
 
 /**
  * AVOption
+ * @think3r : AVOption
+ *  1. 用于 xxx 结构体(class) 中 变量 的描述 ----> const static 全局变量数组, 相当于属性(在 AVClass 中有固定地址, 而 AVClass 描述对应 class)
+ *  2. 多和 AVDictionary 结合, 通过 av_opt_set_dict() 来配置某些私有参数
+ *      offset 为结构体变量偏移地址. 具体指向的结构体和变量可看 offsetof 的计算, E.g. : `offsetof(AACEncContext, options.mid_side)`
+ *      type 为 类型
+ *      default_val 为默认值
  */
 typedef struct AVOption {
     const char *name;

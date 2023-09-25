@@ -84,6 +84,12 @@ typedef struct AVDictionaryEntry {
     char *value;
 } AVDictionaryEntry;
 
+/**
+ * @think3r AVDictionary
+ * 参数字典. 用途 :  `av_opt_set_dict()`
+ *  1. 命令行参数解析后的存放
+ *  2. 内部参数的配置
+ */
 typedef struct AVDictionary AVDictionary;
 
 /**

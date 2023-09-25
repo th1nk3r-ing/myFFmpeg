@@ -1,4 +1,6 @@
 #! /bin/sh
+#
+# doc : https://blog.csdn.net/leixiaohua1020/article/details/44226355
 
 BEAR_MARK=""
 # if [ bear --version | grep ]
