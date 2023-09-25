@@ -674,6 +674,9 @@ typedef struct AVInputFormat {
      * Tell if a given file has a chance of being parsed as this format.
      * The buffer provided is guaranteed to be AVPROBE_PADDING_SIZE bytes
      * big so you do not have to check for that unless you need more.
+     * @think3r 通过分析 AVProbeData 中的数据来确认到底是哪种封装
+     *      NOTE: 1. 每种封装所支持的编码格式和轨道个数都是不同的, 因此每种格式的 read_header 也是不同的
+     *            2. `AVInputFormat` 也因此为 `const struct`
      */
     int (*read_probe)(AVProbeData *);
 
@@ -681,6 +684,7 @@ typedef struct AVInputFormat {
      * Read the format header and initialize the AVFormatContext
      * structure. Return 0 if OK. 'avformat_new_stream' should be
      * called to create new streams.
+     * @think3r NOTE: header 的读取会分析出 stream 的个数 `AVFormatContext->nb_streams` & `AVFormatContext->streams`;
      */
     int (*read_header)(struct AVFormatContext *);
 

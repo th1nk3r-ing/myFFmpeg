@@ -1175,7 +1175,7 @@ int av_opt_show2(void *obj, void *av_log_obj, int req_flags, int rej_flags)
     return 0;
 }
 
-void av_opt_set_defaults(void *s)
+void av_opt_set_defaults(void *s)   // s 的首个变量为指向 `AVClass` 的指针
 {
     av_opt_set_defaults2(s, 0, 0);
 }
