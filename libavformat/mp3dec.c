@@ -600,6 +600,21 @@ static int mp3_seek(AVFormatContext *s, int stream_index, int64_t timestamp,
     return 0;
 }
 
+/**
+ * @think3r ffmpeg 的 C 仿 C++ 设计哲学 TODO: 完善....
+ *
+ * 设计 const 全局结构体作为 C++ 的类原型 :
+ *           `static const AVClass demuxer_class` 可以理解为 `static const class demuxer_class : public AVClass {};`
+ *               即 AVClass 为虚基类, demuxer_class 则为其(虚)子类
+ *        同理 : `const AVInputFormat ff_mp3_demuxer` <======> `const class ff_mp3_demux : public AVInputFormat {};`
+ *     NOTE: `AVClass` 和 `AVInputFormat` 结构体自身是虚基类 : 内部有虚函数(函数指针等)需要赋值;
+ *           `demuxer_class` 和 `ff_mp3_demuxer` 自身又是 const 的, 意味着是一个 const class
+ *            `AVInputFormat.priv_class` 描述的是 `AVInputFormat.priv_data _size`, 即: `MP3DecContext` 结构的第一个成员即为 `AVClass`
+ * 使用 : 委托.
+ *      1. 先通过 const global xxx 数组中的 xxx[i].name 查找对应的 class,  然后 alloc 对应外部控制结构体(xxContext), 然后将 class 的指针 `ff_mp3_demuxer` 赋值
+ *      2. 对应 ff_mp3_demuxer 的私有数据则通过 `priv_data_size` 来 malloc, 内存地址一般为 `xxContext.priv_data` , 向外部通过注册的 AVOption 来进行配置
+ *  `ff_alloc_input_device_context()`
+ */
 static const AVOption options[] = {
     { "usetoc", "use table of contents", offsetof(MP3DecContext, usetoc), AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, AV_OPT_FLAG_DECODING_PARAM},
     { NULL },

@@ -1,6 +1,7 @@
 #! /bin/sh
 #
-# doc : https://blog.csdn.net/leixiaohua1020/article/details/44226355
+# doc : <https://blog.csdn.net/leixiaohua1020/article/details/44226355>
+#       <https://ffmpeg.xianwaizhiyin.net>
 
 BEAR_MARK=""
 # if [ bear --version | grep ]
