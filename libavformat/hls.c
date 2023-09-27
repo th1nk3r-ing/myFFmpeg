@@ -1418,7 +1418,7 @@ static int hls_read_header(AVFormatContext *s)
 
         pls->index  = i;
         pls->needed = 1;
-        pls->parent = s;
+        pls->parent = s;        // @think3r 外部传入的主 `AVFormatContext`
         pls->cur_seq_no = select_cur_seq_no(c, pls);
 
         pls->read_buffer = av_malloc(INITIAL_BUFFER_SIZE);
@@ -1449,6 +1449,7 @@ static int hls_read_header(AVFormatContext *s)
         if ((ret = ff_copy_whitelists(pls->ctx, s)) < 0)
             goto fail;
 
+        // @think3r NOTE: 此处是内部的格式解析, 外部 AVInputFormat (pls->parent->iformat) 为 hls, 内部 AVInputFormat (pls->ctx->iformat)则为 mpegts
         ret = avformat_open_input(&pls->ctx, pls->segments[0]->url, in_fmt, NULL);
         if (ret < 0)
             goto fail;
@@ -1461,7 +1462,7 @@ static int hls_read_header(AVFormatContext *s)
         }
 
         pls->ctx->ctx_flags &= ~AVFMTCTX_NOHEADER;
-        ret = avformat_find_stream_info(pls->ctx, NULL);
+        ret = avformat_find_stream_info(pls->ctx, NULL);    // @think3r 填充当前 playlit 的 pls->ctx 信息
         if (ret < 0)
             goto fail;
 
@@ -1470,7 +1471,7 @@ static int hls_read_header(AVFormatContext *s)
 
         /* Create new AVStreams for each stream in this playlist */
         for (j = 0; j < pls->ctx->nb_streams; j++) {
-            AVStream *st = avformat_new_stream(s, NULL);
+            AVStream *st = avformat_new_stream(s, NULL);    // @think3r NOTE: 新建空 `AVStream`, 并使得 `s->nb_streams++`
             AVStream *ist = pls->ctx->streams[j];
             if (!st) {
                 ret = AVERROR(ENOMEM);
@@ -1478,6 +1479,7 @@ static int hls_read_header(AVFormatContext *s)
             }
             st->id = i;
 
+            // @think3r 将内部 ts 解析之后的 codec 信息拷贝至外部 `st->codec`
             avcodec_copy_context(st->codec, pls->ctx->streams[j]->codec);
 
             if (pls->is_id3_timestamped) /* custom timestamps via id3 */

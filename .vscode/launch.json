@@ -15,8 +15,37 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
-            "miDebuggerPath": "/usr/bin/gdb"
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb",
+            },
+            "osx": {
+                "MIMode": "lldb",
+                // "miDebuggerPath": "/usr/bin/lldb"
+            }
+        },
+        {
+            "name": "ffplay",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ffplay_g",
+                "args": ["SpaceX-Falcon-Heavy-Elon-Musk's-Engineering-Masterpiece-[sX1Y2JMK6g8].mp4"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb",
+                "args": ["/home/th1nk3r/Movies/spaceX.mp4"],
+                // "args": ["/home/th1nk3r/Movies/spaceX.ts"],
+            },
+            "osx": {
+                "MIMode": "lldb",
+                // "miDebuggerPath": "/usr/local/bin/gdb",
+                "args": ["/Users/think3r/Movies/1_video/out_mtk_stuck.ts"],
+                // "args": ["/Users/think3r/Movies/youtube/SpaceX-Falcon-Heavy-Elon-Musk's-Engineering-Masterpiece-[sX1Y2JMK6g8].mp4"],
+            }
         },
         {
             "name": "demuxing_decoding_g",

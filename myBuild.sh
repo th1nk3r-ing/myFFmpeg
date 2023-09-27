@@ -2,6 +2,7 @@
 #
 # doc : <https://blog.csdn.net/leixiaohua1020/article/details/44226355>
 #       <https://ffmpeg.xianwaizhiyin.net>
+#       <https://zhuanlan.zhihu.com/p/143195044>
 
 BEAR_MARK=""
 # if [ bear --version | grep ]
