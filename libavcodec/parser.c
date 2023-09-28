@@ -30,7 +30,7 @@
 #include "internal.h"
 #include "parser.h"
 
-static AVCodecParser *av_first_parser = NULL;
+static AVCodecParser *av_first_parser = NULL;   // @think3r 注册的 AVCodecParser 链表
 
 AVCodecParser *av_parser_next(const AVCodecParser *p)
 {
@@ -56,6 +56,7 @@ AVCodecParserContext *av_parser_init(int codec_id)
     if (codec_id == AV_CODEC_ID_NONE)
         return NULL;
 
+    // @think3r `AVCodecParser` 链表查找
     for (parser = av_first_parser; parser; parser = parser->next) {
         if (parser->codec_ids[0] == codec_id ||
             parser->codec_ids[1] == codec_id ||
@@ -66,7 +67,7 @@ AVCodecParserContext *av_parser_init(int codec_id)
     }
     return NULL;
 
-found:
+found:  // @think3r `AVCodecParser` 初始化
     s = av_mallocz(sizeof(AVCodecParserContext));
     if (!s)
         goto err_out;

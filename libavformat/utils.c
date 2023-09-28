@@ -669,7 +669,7 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
         pkt->data = NULL;
         pkt->size = 0;
         av_init_packet(pkt);
-        ret = s->iformat->read_packet(s, pkt);
+        ret = s->iformat->read_packet(s, pkt);  // @think3r 读取一帧 (demux to pkt)
         if (ret < 0) {
             if (!pktl || ret == AVERROR(EAGAIN))
                 return ret;
@@ -3193,7 +3193,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
     read_size = 0;
     for (;;) {
         int analyzed_all_streams;
-        if (ff_check_interrupt(&ic->interrupt_callback)) {
+        if (ff_check_interrupt(&ic->interrupt_callback)) {      // @think3r 用户强制退出
             ret = AVERROR_EXIT;
             av_log(ic, AV_LOG_DEBUG, "interrupted\n");
             break;
@@ -3370,7 +3370,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
             ff_rfps_add_frame(ic, st, pkt->dts);
 #endif
         if (st->parser && st->parser->parser->split && !st->codec->extradata) {
-            int i = st->parser->parser->split(st->codec, pkt->data, pkt->size);
+            int i = st->parser->parser->split(st->codec, pkt->data, pkt->size); // @think3r Packer 的解析 TODO: 确认得到什么数据 ?
             if (i > 0 && i < FF_MAX_EXTRADATA_SIZE) {
                 if (ff_alloc_extradata(st->codec, i))
                     return AVERROR(ENOMEM);
@@ -3389,7 +3389,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
          * the channel configuration and does not only trust the values from
          * the container. */
         try_decode_frame(ic, st, pkt,
-                         (options && i < orig_nb_streams) ? &options[i] : NULL);
+                         (options && i < orig_nb_streams) ? &options[i] : NULL); // @think3r 尝试解码一帧得到 video 的 W/H...=
 
         if (ic->flags & AVFMT_FLAG_NOBUFFER)
             av_packet_unref(pkt);

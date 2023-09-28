@@ -1458,7 +1458,7 @@ int attribute_align_arg avcodec_open2(AVCodecContext *avctx, const AVCodec *code
         goto free_and_end;
     }
 
-    avctx->codec = codec;
+    avctx->codec = codec;   // @think3r `Acodec` 赋值
     if ((avctx->codec_type == AVMEDIA_TYPE_UNKNOWN || avctx->codec_type == codec->type) &&
         avctx->codec_id == AV_CODEC_ID_NONE) {
         avctx->codec_type = codec->type;
@@ -1662,7 +1662,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
     if (   avctx->codec->init && (!(avctx->active_thread_type&FF_THREAD_FRAME)
         || avctx->internal->frame_thread_encoder)) {
-        ret = avctx->codec->init(avctx);
+        ret = avctx->codec->init(avctx);        // @think3r `AVCodec` 初始化
         if (ret < 0) {
             goto free_and_end;
         }
@@ -2989,7 +2989,7 @@ static AVCodec *find_encdec(enum AVCodecID id, int encoder)
             } else
                 return p;
         }
-        p = p->next;
+        p = p->next;    // @think3r `AVCodec` 链表循环
     }
     return experimental;
 }

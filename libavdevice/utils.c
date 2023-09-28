@@ -37,7 +37,7 @@ int ff_alloc_input_device_context(AVFormatContext **avctx, AVInputFormat *iforma
     *avctx = NULL;
     if (!iformat && !format)
         return AVERROR(EINVAL);
-    if (!(s = avformat_alloc_context()))    // context 的 alloc 和赋值
+    if (!(s = avformat_alloc_context()))    // @think3r context 的 alloc 和初始化
         return AVERROR(ENOMEM);
 
     if (!iformat)   // iformat 未指定, find
