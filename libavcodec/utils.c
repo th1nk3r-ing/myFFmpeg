@@ -172,7 +172,7 @@ static av_cold void avcodec_init(void)
 }
 
 int av_codec_is_encoder(const AVCodec *codec)
-{
+{   // @think3r  新版本 ffmpeg 通过 `struct FFCodec` 中的联合体 `unsigned cb_type:3;` 来判断是编码器 or 解码器
     return codec && (codec->encode_sub || codec->encode2);
 }
 
@@ -1394,7 +1394,7 @@ int attribute_align_arg avcodec_open2(AVCodecContext *avctx, const AVCodec *code
         goto free_and_end;
     }
 
-    if (codec->priv_data_size > 0) {
+    if (codec->priv_data_size > 0) {    // @think3r codec 私有数据赋值
         if (!avctx->priv_data) {
             avctx->priv_data = av_mallocz(codec->priv_data_size);
             if (!avctx->priv_data) {
@@ -1662,7 +1662,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
     if (   avctx->codec->init && (!(avctx->active_thread_type&FF_THREAD_FRAME)
         || avctx->internal->frame_thread_encoder)) {
-        ret = avctx->codec->init(avctx);        // @think3r `AVCodec` 初始化
+        ret = avctx->codec->init(avctx);        // @think3r `AVCodec` 编解码器初始化
         if (ret < 0) {
             goto free_and_end;
         }

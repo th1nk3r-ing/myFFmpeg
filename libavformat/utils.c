@@ -26,6 +26,7 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
+#include "libavutil/avutil.h"
 #include "libavutil/dict.h"
 #include "libavutil/internal.h"
 #include "libavutil/mathematics.h"
@@ -510,7 +511,7 @@ fail:
 
 /*******************************************************/
 
-static void force_codec_ids(AVFormatContext *s, AVStream *st)
+static void force_codec_ids(AVFormatContext *s, AVStream *st) // @think3r 更新外部 (AVFormatContext) codecId
 {
     switch (st->codec->codec_type) {
     case AVMEDIA_TYPE_VIDEO:
@@ -815,7 +816,7 @@ static int is_intra_only(AVCodecContext *enc) {
 
 static int has_decode_delay_been_guessed(AVStream *st)
 {
-    if (st->codec->codec_id != AV_CODEC_ID_H264) return 1;
+    if (st->codec->codec_id != AV_CODEC_ID_H264) return 1;      // @think3r TODO: h265 ???
     if (!st->info) // if we have left find_stream_info then nb_decoded_frames won't increase anymore for stream copy
         return 1;
 #if CONFIG_H264_DECODER
@@ -2725,7 +2726,7 @@ static int try_decode_frame(AVFormatContext *s, AVStream *st, AVPacket *avpkt,
            ret >= 0 &&
            (!has_codec_parameters(st, NULL) || !has_decode_delay_been_guessed(st) ||
             (!st->codec_info_nb_frames &&
-             (st->codec->codec->capabilities & AV_CODEC_CAP_CHANNEL_CONF)))) {
+             (st->codec->codec->capabilities & AV_CODEC_CAP_CHANNEL_CONF)))) {  // @think3r NOTE: 只有当条件满足时才进行解码尝试, 避免资源占用. TODO: check h265
         got_picture = 0;
         switch (st->codec->codec_type) {
         case AVMEDIA_TYPE_VIDEO:
@@ -3138,7 +3139,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
             if (!st->codec->time_base.num)
                 st->codec->time_base = st->time_base;
         }
-        // only for the split stuff
+        // only for the split stuff     @think3r 此处是不是可以优化 : mpegts 去除次标志啥的 ? TODO: check 代码
         if (!st->parser && !(ic->flags & AVFMT_FLAG_NOPARSE)) {
             st->parser = av_parser_init(st->codec->codec_id);
             if (st->parser) {
@@ -3153,7 +3154,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
                        avcodec_get_name(st->codec->codec_id));
             }
         }
-        codec = find_decoder(ic, st, st->codec->codec_id);
+        codec = find_decoder(ic, st, st->codec->codec_id);  // @think3r 根据 `AVCodecContext` 中的 codec_id 找到 `AVCodec`
 
         /* Force thread count to 1 since the H.264 decoder will not extract
          * SPS and PPS to extradata during multi-threaded decoding. */
@@ -3163,7 +3164,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
             av_dict_set(options ? &options[i] : &thread_opt, "codec_whitelist", ic->codec_whitelist, 0);
 
         /* Ensure that subtitle_header is properly set. */
-        if (st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE
+        if (st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE    // @think3r 字幕
             && codec && !st->codec->codec) {
             if (avcodec_open2(st->codec, codec, options ? &options[i] : &thread_opt) < 0)
                 av_log(ic, AV_LOG_WARNING,
@@ -3389,7 +3390,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
          * the channel configuration and does not only trust the values from
          * the container. */
         try_decode_frame(ic, st, pkt,
-                         (options && i < orig_nb_streams) ? &options[i] : NULL); // @think3r 尝试解码一帧得到 video 的 W/H...=
+                         (options && i < orig_nb_streams) ? &options[i] : NULL); // @think3r 尝试解码一帧得到 video 的 W/H... ??? TODO: check....
 
         if (ic->flags & AVFMT_FLAG_NOBUFFER)
             av_packet_unref(pkt);

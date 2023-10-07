@@ -64,7 +64,7 @@ typedef struct HLSContext {
     int n_variants;
     struct variant **variants;
     int cur_seq_no;
-    URLContext *seg_hd;
+    URLContext *seg_hd;                 // @think3r 内部的 `URLProtocol` 为 http/https
     int64_t last_load_time;
 } HLSContext;
 

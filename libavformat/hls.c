@@ -93,9 +93,9 @@ struct playlist {
     AVIOContext pb;
     uint8_t* read_buffer;
     URLContext *input;
-    AVFormatContext *parent;
+    AVFormatContext *parent;    // @think3r hls 协议
     int index;
-    AVFormatContext *ctx;
+    AVFormatContext *ctx;       // @think3r mpegts 协议
     AVPacket pkt;
     int stream_offset;
 
