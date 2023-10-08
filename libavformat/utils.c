@@ -1301,11 +1301,11 @@ static int read_from_packet_buffer(AVPacketList **pkt_buffer,
     AVPacketList *pktl;
     av_assert0(*pkt_buffer);
     pktl        = *pkt_buffer;
-    *pkt        = pktl->pkt;
-    *pkt_buffer = pktl->next;
+    *pkt        = pktl->pkt;        // @think3r 数据赋值
+    *pkt_buffer = pktl->next;       // @think3r 链表迭代
     if (!pktl->next)
-        *pkt_buffer_end = NULL;
-    av_freep(&pktl);
+        *pkt_buffer_end = NULL;     // @Think3r 尾节点处理
+    av_freep(&pktl);           // @think3r 释放链表节点
     return 0;
 }
 

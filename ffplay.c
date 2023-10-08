@@ -558,7 +558,7 @@ static int decoder_decode_frame(Decoder *d, AVFrame *frame, AVSubtitle *sub) {
             do {
                 if (d->queue->nb_packets == 0)
                     SDL_CondSignal(d->empty_queue_cond);
-                if (packet_queue_get(d->queue, &pkt, 1, &d->pkt_serial) < 0)
+                if (packet_queue_get(d->queue, &pkt, 1, &d->pkt_serial) < 0)    // @think3r 从队列中获取 `AVPacket`
                     return -1;
                 if (pkt.data == flush_pkt.data) {
                     avcodec_flush_buffers(d->avctx);
@@ -568,12 +568,12 @@ static int decoder_decode_frame(Decoder *d, AVFrame *frame, AVSubtitle *sub) {
                 }
             } while (pkt.data == flush_pkt.data || d->queue->serial != d->pkt_serial);
             av_free_packet(&d->pkt);
-            d->pkt_temp = d->pkt = pkt;
+            d->pkt_temp = d->pkt = pkt;     // @think3r NOTE: pkt 赋值, 将 `d->pkt_temp` 用于解码
             d->packet_pending = 1;
         }
 
         switch (d->avctx->codec_type) {
-            case AVMEDIA_TYPE_VIDEO:
+            case AVMEDIA_TYPE_VIDEO:    // @think3r 视频解码
                 ret = avcodec_decode_video2(d->avctx, frame, &got_frame, &d->pkt_temp);
                 if (got_frame) {
                     if (decoder_reorder_pts == -1) {
@@ -2309,7 +2309,7 @@ static int synchronize_audio(VideoState *is, int nb_samples)
  *
  * The processed audio frame is decoded, converted if required, and
  * stored in is->audio_buf, with size in bytes given by the return
- * value.
+ * value. @think3r NOTE: 此处的音频已经被解码为 PCM 了, 进行的主要是重采样(通过 `swr`)
  */
 static int audio_decode_frame(VideoState *is)
 {
@@ -2433,7 +2433,7 @@ static void sdl_audio_callback(void *opaque, Uint8 *stream, int len)
 
     while (len > 0) {
         if (is->audio_buf_index >= is->audio_buf_size) {
-           audio_size = audio_decode_frame(is);
+           audio_size = audio_decode_frame(is); // @think3r 重采样
            if (audio_size < 0) {
                 /* if error, just output silence */
                is->audio_buf      = is->silence_buf;

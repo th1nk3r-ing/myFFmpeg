@@ -71,7 +71,7 @@ struct AVFormatInternal {
     /**
      * This buffer is only needed when packets were already buffered but
      * not decoded, for example to get the codec parameters in MPEG
-     * streams.
+     * streams. @think3r TODO: MPEG-streams 需要解析来获得编解码器参数 ?
      */
     struct AVPacketList *packet_buffer;
     struct AVPacketList *packet_buffer_end;
