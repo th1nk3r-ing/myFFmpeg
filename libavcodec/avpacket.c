@@ -560,16 +560,16 @@ int av_packet_ref(AVPacket *dst, const AVPacket *src)
 {
     int ret;
 
-    ret = av_packet_copy_props(dst, src);
+    ret = av_packet_copy_props(dst, src);   // @think3r 参数以及 sideData 的拷贝
     if (ret < 0)
         return ret;
 
-    if (!src->buf) {
+    if (!src->buf) {    // @think3r 非引用计共享的 `AVPacket`
         ret = packet_alloc(&dst->buf, src->size);
         if (ret < 0)
             goto fail;
-        memcpy(dst->buf->data, src->data, src->size);
-    } else {
+        memcpy(dst->buf->data, src->data, src->size);   // @think3r src 为非引用计数 packet 时直接拷贝 src 到 dstPacket 中 : 两者数据在内存中是独立的
+    } else {            // @think3r 引用计数 : 申请 `AVBufferRef` 内存, 并对 `AVBuffer->refCount` 进行原子自增
         dst->buf = av_buffer_ref(src->buf);
         if (!dst->buf) {
             ret = AVERROR(ENOMEM);

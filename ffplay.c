@@ -567,7 +567,7 @@ static int decoder_decode_frame(Decoder *d, AVFrame *frame, AVSubtitle *sub) {
                     d->next_pts_tb = d->start_pts_tb;
                 }
             } while (pkt.data == flush_pkt.data || d->queue->serial != d->pkt_serial);
-            av_free_packet(&d->pkt);
+            av_free_packet(&d->pkt);    // @think3r 释放旧的 pkt
             d->pkt_temp = d->pkt = pkt;     // @think3r NOTE: pkt 赋值, 将 `d->pkt_temp` 用于解码
             d->packet_pending = 1;
         }
@@ -1663,7 +1663,7 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts, double 
         AVPicture pict = { { 0 } };
 
         /* get a pointer on the bitmap */
-        SDL_LockYUVOverlay (vp->bmp);
+        SDL_LockYUVOverlay (vp->bmp);       // @think3r NOTE: `AVFrame` ===> `SDL_Overlay * bmp`
 
         pict.data[0] = vp->bmp->pixels[0];
         pict.data[1] = vp->bmp->pixels[2];
@@ -1676,7 +1676,7 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts, double 
 #if CONFIG_AVFILTER
         // FIXME use direct rendering
         av_picture_copy(&pict, (AVPicture *)src_frame,
-                        src_frame->format, vp->width, vp->height);
+                        src_frame->format, vp->width, vp->height);  // @think3r NOTE: YUV 数据的拷贝, 向 AVFrame->bmp 传递
 #else
         {
             AVDictionaryEntry *e = av_dict_get(sws_dict, "sws_flags", NULL, 0);
@@ -3057,7 +3057,7 @@ static int read_thread(void *arg)
         } else if (pkt->stream_index == is->video_stream && pkt_in_play_range
                    && !(is->video_st->disposition & AV_DISPOSITION_ATTACHED_PIC)) {
             packet_queue_put(&is->videoq, pkt);
-        } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
+    } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
             packet_queue_put(&is->subtitleq, pkt);
         } else {
             av_free_packet(pkt);

@@ -927,7 +927,7 @@ typedef struct AVStream {
      * decoding: set by libavformat, must not be modified by the caller.
      * encoding: unused
      */
-    AVPacket attached_pic;
+    AVPacket attached_pic;  // @think3r  ~~MP3 等的专辑封面, 一般多为单独的轨道(E.g. : streams[1])~~
 
     /**
      * An array of side data that applies to the whole stream (i.e. the

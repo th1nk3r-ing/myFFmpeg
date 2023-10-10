@@ -11,7 +11,12 @@ if (uname -a | grep -E "WSL2|Darwin" > /dev/null); then
    echo "this is   WSL2 | Darwin"
 fi
 
-./configure --enable-debug
+CONFIG_FLAG=""
+# if [ "$(uname -a)" == "Darwin" ]; then
+#    CONFIG_FLAG= "--enable-shared --disable-static"
+# fi
+
+./configure --enable-debug ${CONFIG_FLAG}
 
 bear ${BEAR_MARK} make -j8 && bear --append ${BEAR_MARK} make examples -j4
 

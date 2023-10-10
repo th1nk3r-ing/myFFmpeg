@@ -1222,7 +1222,7 @@ typedef struct AVPanScan{
  * @{
  */
 enum AVPacketSideDataType {
-    AV_PKT_DATA_PALETTE,
+    AV_PKT_DATA_PALETTE,            // @think3r 调色板
     AV_PKT_DATA_NEW_EXTRADATA,
 
     /**
@@ -1276,7 +1276,7 @@ enum AVPacketSideDataType {
      *
      * See libavutil/display.h for a detailed description of the data.
      */
-    AV_PKT_DATA_DISPLAYMATRIX,
+    AV_PKT_DATA_DISPLAYMATRIX,      // @think3r 显示矩阵???
 
     /**
      * This side data should be associated with a video stream and contains
@@ -1403,7 +1403,7 @@ typedef struct AVPacket {
      * stored.
      * May be NULL, then the packet data is not reference-counted.
      */
-    AVBufferRef *buf;
+    AVBufferRef *buf;   // @think3r NOTE: `buf == NULL` 时表示当前 packet 是非引用计数的
     /**
      * Presentation timestamp in AVStream->time_base units; the time at which
      * the decompressed packet will be presented to the user.
@@ -1420,7 +1420,7 @@ typedef struct AVPacket {
      * Can be AV_NOPTS_VALUE if it is not stored in the file.
      */
     int64_t dts;
-    uint8_t *data;
+    uint8_t *data;      // @think3r NOTE: 对于视频 pkt 来说 : 并没有起始码 `0x00000001`, 前 4 个字节是大小 `pkt->size`; NOTE: 新版本变成了 startCode `0x000001`
     int   size;
     int   stream_index;
     /**
@@ -1614,7 +1614,7 @@ typedef struct AVCodecContext {
      * - encoding: Set/allocated/freed by libavcodec.
      * - decoding: Set/allocated/freed by user.
      */
-    uint8_t *extradata;
+    uint8_t *extradata;     // @think3r 存储着 H264/H265 的 SPS, PPS, VPS 等数据 (v2.8 还有 AUD, 而 v5.0+ 则没有)
     int extradata_size;
 
     /**

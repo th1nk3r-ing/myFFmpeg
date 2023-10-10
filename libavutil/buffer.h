@@ -79,7 +79,7 @@ typedef struct AVBuffer AVBuffer;
  * to be allocated directly.
  */
 typedef struct AVBufferRef {
-    AVBuffer *buffer;
+    AVBuffer *buffer;           // @think3r NOTE: `AVBufferRef` 自身不可共享, 而 `AVBuffer` 可共享 (在内存中只有一份)
 
     /**
      * The data buffer. It is considered writable if and only if

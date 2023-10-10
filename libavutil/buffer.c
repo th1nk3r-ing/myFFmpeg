@@ -98,7 +98,7 @@ AVBufferRef *av_buffer_ref(AVBufferRef *buf)
 
     *ret = *buf;
 
-    avpriv_atomic_int_add_and_fetch(&buf->buffer->refcount, 1);
+    avpriv_atomic_int_add_and_fetch(&buf->buffer->refcount, 1);   // @think3r NOTE:  `AVBuffer->refCount` 是原子性的 `+1` (并发安全)
 
     return ret;
 }
@@ -115,7 +115,7 @@ static void buffer_replace(AVBufferRef **dst, AVBufferRef **src)
     } else
         av_freep(dst);
 
-    if (!avpriv_atomic_int_add_and_fetch(&b->refcount, -1)) {
+    if (!avpriv_atomic_int_add_and_fetch(&b->refcount, -1)) {   // @think3r 原子性自减 `-1`
         b->free(b->opaque, b->data);
         av_freep(&b);
     }
