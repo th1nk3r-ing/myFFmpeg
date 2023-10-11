@@ -4536,15 +4536,21 @@ enum AVPictureStructure {
     AV_PICTURE_STRUCTURE_FRAME,        //< coded as frame
 };
 
+/* @think3r NOTE:
+ * ref: [FFMPEG 之 parse_packet](https://blog.csdn.net/intel1985/article/details/112864008)
+ *   1. Parser 主要作用是 ES 的拆帧(组帧 Framing)操作
+ *   2. 同时可以负责一部分参数的解析 : 包括像 PTS, frame rate估计, 视频宽高, 是否是关键帧等等基本信息的获取 (实际上FFMPEG中视频基本信息就是在 parser 中完成的)
+ *   -  主要可以总结为 Frame 的 PTS, 头(起始码?), 数据, 数据尾
+ */
 typedef struct AVCodecParserContext {
     void *priv_data;
     struct AVCodecParser *parser;
     int64_t frame_offset; /* offset of the current frame */
-    int64_t cur_offset; /* current offset
+    int64_t cur_offset; /* current offset                       // @think3r 代表了当前包中的 ES 流在全部 demux 出来的 ES 中的偏移
                            (incremented by each av_parser_parse()) */
-    int64_t next_frame_offset; /* offset of the next frame */
+    int64_t next_frame_offset; /* offset of the next frame */ // @think3r 始终指向下一个待输出的 frame 偏移
     /* video info */
-    int pict_type; /* XXX: Put it back in AVCodecContext. */
+    int pict_type; /* XXX: Put it back in AVCodecContext. */    // @think3r 待输出帧的类型 : I/B/P
     /**
      * This field is used for proper frame duration computation in lavf.
      * It signals, how much longer the frame duration of the current frame

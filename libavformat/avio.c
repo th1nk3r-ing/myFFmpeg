@@ -354,7 +354,7 @@ int ffurl_read(URLContext *h, unsigned char *buf, int size)
 {
     if (!(h->flags & AVIO_FLAG_READ))
         return AVERROR(EIO);
-    return retry_transfer_wrapper(h, buf, size, 1, h->prot->url_read);
+    return retry_transfer_wrapper(h, buf, size, 1, h->prot->url_read);  // @think3r NOTE: 最终调用各个协议的读取函数
 }
 
 int ffurl_read_complete(URLContext *h, unsigned char *buf, int size)

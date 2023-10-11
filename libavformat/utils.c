@@ -1314,6 +1314,7 @@ static int64_t ts_to_samples(AVStream *st, int64_t ts)
     return av_rescale(ts, st->time_base.num * st->codec->sample_rate, st->time_base.den);
 }
 
+// TODO: FIXME: @think3r 此处的函数指针分析链 ............... avio_read() && ffurl_read(
 static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
 {
     int ret = 0, i, got_packet = 0;
@@ -1326,13 +1327,13 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
         AVPacket cur_pkt;
 
         /* read next packet */
-        ret = ff_read_packet(s, &cur_pkt);
+        ret = ff_read_packet(s, &cur_pkt);  // @think3r NOTE: ~~调用链 : iformat->read_packet() ---> avio_read() ---> AVIOContext->read_packet() ?~~
         if (ret < 0) {
             if (ret == AVERROR(EAGAIN))
                 return ret;
             /* flush the parsers */
             for (i = 0; i < s->nb_streams; i++) {
-                st = s->streams[i];
+                st = s->streams[i];     //  @think3r 不能继续从流当中取帧时，则尝试输出最后一帧
                 if (st->parser && st->need_parsing)
                     parse_packet(s, NULL, st->index);
             }
@@ -1362,7 +1363,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
                    cur_pkt.size, cur_pkt.duration, cur_pkt.flags);
 
         if (st->need_parsing && !st->parser && !(s->flags & AVFMT_FLAG_NOPARSE)) {
-            st->parser = av_parser_init(st->codec->codec_id);
+            st->parser = av_parser_init(st->codec->codec_id);       // @think3r NOTE: 需要 Parser, 根据 codec_id 查找并初始化一个 parser
             if (!st->parser) {
                 av_log(s, AV_LOG_VERBOSE, "parser not found for codec "
                        "%s, packets or times may be invalid.\n",
@@ -1378,7 +1379,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
         }
 
         if (!st->need_parsing || !st->parser) {
-            /* no parsing needed: we just output the packet as is */
+            /* no parsing needed: we just output the packet as is */    // @think3r 不需要 parse, 直接输出当前 packet
             *pkt = cur_pkt;
             compute_pkt_fields(s, st, NULL, pkt, AV_NOPTS_VALUE, AV_NOPTS_VALUE);
             if ((s->iformat->flags & AVFMT_GENERIC_INDEX) &&
@@ -1406,7 +1407,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
         }
     }
 
-    if (!got_packet && s->internal->parse_queue)
+    if (!got_packet && s->internal->parse_queue)    // @think3r 未找到 pkt (不是直接输出) 并且 parse 对列不空，从 parse 队列取包输出。
         ret = read_from_packet_buffer(&s->internal->parse_queue, &s->internal->parse_queue_end, pkt);
 
     if (ret >= 0) {

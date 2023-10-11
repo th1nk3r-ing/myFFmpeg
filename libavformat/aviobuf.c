@@ -789,7 +789,7 @@ int ffio_fdopen(AVIOContext **s, URLContext *h)
         return AVERROR(ENOMEM);
 
     *s = avio_alloc_context(buffer, buffer_size, h->flags & AVIO_FLAG_WRITE, h,
-                            (int (*)(void *, uint8_t *, int)) ffurl_read,
+                            (int (*)(void *, uint8_t *, int)) ffurl_read,       // @think3r NOTE: `AVIOContext` 的几个函数被统一配置了!!!!!
                             (int (*)(void *, uint8_t *, int)) ffurl_write,
                             (int64_t (*)(void *, int64_t, int)) ffurl_seek);
     if (!*s) {
