@@ -1327,13 +1327,13 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
         AVPacket cur_pkt;
 
         /* read next packet */
-        ret = ff_read_packet(s, &cur_pkt);  // @think3r NOTE: ~~调用链 : iformat->read_packet() ---> avio_read() ---> AVIOContext->read_packet() ?~~
+        ret = ff_read_packet(s, &cur_pkt);  // @think3r NOTE: 调用链 : iformat->read_packet() ---> avio_read() ---> AVIOContext->read_packet() ?
         if (ret < 0) {
             if (ret == AVERROR(EAGAIN))
                 return ret;
             /* flush the parsers */
             for (i = 0; i < s->nb_streams; i++) {
-                st = s->streams[i];     //  @think3r 不能继续从流当中取帧时，则尝试输出最后一帧
+                st = s->streams[i];     //  @think3r 不能继续从流当中取帧时，则尝试输出最后一帧 ?
                 if (st->parser && st->need_parsing)
                     parse_packet(s, NULL, st->index);
             }

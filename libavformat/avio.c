@@ -240,14 +240,14 @@ static struct URLProtocol *url_find_protocol(const char *filename)
 {
     URLProtocol *up = NULL;
     char proto_str[128], proto_nested[128], *ptr;
-    size_t proto_len = strspn(filename, URL_SCHEME_CHARS);
+    size_t proto_len = strspn(filename, URL_SCHEME_CHARS);  // @think3r 分割 filename
 
     if (filename[proto_len] != ':' &&
         (filename[proto_len] != ',' || !strchr(filename + proto_len + 1, ':')) ||
-        is_dos_path(filename))
+        is_dos_path(filename))      // @think3r 解析完整 filename, 不是网络协议, 直接赋值 `proto_str="file"`
         strcpy(proto_str, "file");
     else
-        av_strlcpy(proto_str, filename,
+        av_strlcpy(proto_str, filename,     // @think3r 根据 proto_len 来分割得到 `proto_str` , E.g. `proto_str = "http"`
                    FFMIN(proto_len + 1, sizeof(proto_str)));
 
     if ((ptr = strchr(proto_str, ',')))
@@ -256,8 +256,8 @@ static struct URLProtocol *url_find_protocol(const char *filename)
     if ((ptr = strchr(proto_nested, '+')))
         *ptr = '\0';
 
-    while (up = ffurl_protocol_next(up)) {
-        if (!strcmp(proto_str, up->name))
+    while (up = ffurl_protocol_next(up)) {  // @think3r NOTE: 协议 protocol 链表迭代
+        if (!strcmp(proto_str, up->name))   // @think3r NOTE: 协议名字的匹配, 没有 prob 数据哦~
             break;
         if (up->flags & URL_PROTOCOL_FLAG_NESTED_SCHEME &&
             !strcmp(proto_nested, up->name))
@@ -277,7 +277,7 @@ int ffurl_alloc(URLContext **puc, const char *filename, int flags,
                                      "Missing call to av_register_all()?\n");
     }
 
-    p = url_find_protocol(filename);
+    p = url_find_protocol(filename);    // @think3r NOTE: 根据 filename 获取对应协议
     if (p)
        return url_alloc_for_protocol(puc, p, filename, flags, int_cb);
 
