@@ -684,7 +684,11 @@ typedef struct AVInputFormat {
      * Read the format header and initialize the AVFormatContext
      * structure. Return 0 if OK. 'avformat_new_stream' should be
      * called to create new streams.
-     * @think3r NOTE: header 的读取会分析出 stream 的个数 `AVFormatContext->nb_streams` & `AVFormatContext->streams`;
+     * @think3r NOTE:
+     *   1. 通常情况下 header 的读取会分析出 stream 的个数 `AVFormatContext->nb_streams` & `AVFormatContext->streams`;
+     *   2. 对应 HLS 来说, 即是分析第一层 url 获取到的 m3u8 文件 :
+     *               创建对应的 `HLSContext`, 解析每个 segment 的绝对 URL, 请求一个 segment 并对其进行输入格式的 probe,
+     *               同时将最终的解析信息拷贝至外部的 `AVFormatContext`, 详见 `hls_read_packet()`
      */
     int (*read_header)(struct AVFormatContext *);
 

@@ -29,6 +29,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/log.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
 #include "libavutil/dict.h"
@@ -66,10 +67,10 @@ enum KeyType {
 };
 
 struct segment {
-    int64_t duration;
+    int64_t duration;           // @think3r ts 的时长
     int64_t url_offset;
     int64_t size;
-    char *url;
+    char *url;                  // @think3r ts 的下载 url
     char *key;
     enum KeyType key_type;
     uint8_t iv[16];
@@ -92,10 +93,10 @@ struct playlist {
     char url[MAX_URL_SIZE];
     AVIOContext pb;
     uint8_t* read_buffer;
-    URLContext *input;
-    AVFormatContext *parent;    // @think3r hls 协议
+    URLContext *input;          // @think3r NOTE: 用于 ts 自身下载
+    AVFormatContext *parent;    // @think3r 最外部的 hls 协议, 传入
     int index;
-    AVFormatContext *ctx;       // @think3r mpegts 协议
+    AVFormatContext *ctx;       // @think3r 内部的 mpegts 协议, 自用
     AVPacket pkt;
     int stream_offset;
 
@@ -103,7 +104,7 @@ struct playlist {
     enum PlaylistType type;
     int64_t target_duration;
     int start_seq_no;
-    int n_segments;
+    int n_segments;             // @think3r ts 个数
     struct segment **segments;
     int needed, cur_needed;
     int cur_seq_no;
@@ -185,7 +186,7 @@ typedef struct HLSContext {
     AVDictionary *avio_opts;
 } HLSContext;
 
-static int read_chomp_line(AVIOContext *s, char *buf, int maxlen)
+static int read_chomp_line(AVIOContext *s, char *buf, int maxlen)   // @think3r 读取一行
 {
     int len = ff_get_line(s, buf, maxlen);
     while (len > 0 && av_isspace(buf[len - 1]))
@@ -628,8 +629,8 @@ static int parse_playlist(HLSContext *c, const char *url,
             ff_parse_key_value(ptr, (ff_parse_key_val_cb) handle_rendition_args,
                                &info);
             new_rendition(c, &info, url);
-        } else if (av_strstart(line, "#EXT-X-TARGETDURATION:", &ptr)) {
-            ret = ensure_playlist(c, &pls, url);
+        } else if (av_strstart(line, "#EXT-X-TARGETDURATION:", &ptr)) { // @think3r 指定最大的媒体段时间长 s
+            ret = ensure_playlist(c, &pls, url);        // @think3r 创建播放列表 pls
             if (ret < 0)
                 goto fail;
             pls->target_duration = atoi(ptr) * AV_TIME_BASE;
@@ -637,7 +638,7 @@ static int parse_playlist(HLSContext *c, const char *url,
             ret = ensure_playlist(c, &pls, url);
             if (ret < 0)
                 goto fail;
-            pls->start_seq_no = atoi(ptr);
+            pls->start_seq_no = atoi(ptr);              // @think3r
         } else if (av_strstart(line, "#EXT-X-PLAYLIST-TYPE:", &ptr)) {
             ret = ensure_playlist(c, &pls, url);
             if (ret < 0)
@@ -648,10 +649,10 @@ static int parse_playlist(HLSContext *c, const char *url,
                 pls->type = PLS_TYPE_VOD;
         } else if (av_strstart(line, "#EXT-X-ENDLIST", &ptr)) {
             if (pls)
-                pls->finished = 1;
+                pls->finished = 1;                                          // @think3r m3u8 文件解析完成
         } else if (av_strstart(line, "#EXTINF:", &ptr)) {
-            is_segment = 1;
-            duration   = atof(ptr) * AV_TIME_BASE;
+            is_segment = 1;                                                 // @think3r NOTE: 是一个 ts 片段, `is_segment`
+            duration   = atof(ptr) * AV_TIME_BASE;                          // @think3r duration 时长
         } else if (av_strstart(line, "#EXT-X-BYTERANGE:", &ptr)) {
             seg_size = atoi(ptr);
             ptr = strchr(ptr, '@');
@@ -676,7 +677,7 @@ static int parse_playlist(HLSContext *c, const char *url,
                     }
                     pls = c->playlists[c->n_playlists - 1];
                 }
-                seg = av_malloc(sizeof(struct segment));
+                seg = av_malloc(sizeof(struct segment));        // @think3r 申请 segment
                 if (!seg) {
                     ret = AVERROR(ENOMEM);
                     goto fail;
@@ -703,7 +704,7 @@ static int parse_playlist(HLSContext *c, const char *url,
                     seg->key = NULL;
                 }
 
-                ff_make_absolute_url(tmp_str, sizeof(tmp_str), url, line);
+                ff_make_absolute_url(tmp_str, sizeof(tmp_str), url, line);  // @think3r NOTE: 拼接 ts 的 URL, E.g. : http://videocdn.renrenjiang.cn/Act-ss-m3u8-sd/979859_1546052815274/979859_1546052815274-00001.ts
                 seg->url = av_strdup(tmp_str);
                 if (!seg->url) {
                     av_free(seg->key);
@@ -975,7 +976,7 @@ static int open_input(HLSContext *c, struct playlist *pls)
     AVDictionary *opts = NULL;
     AVDictionary *opts2 = NULL;
     int ret;
-    struct segment *seg = pls->segments[pls->cur_seq_no - pls->start_seq_no];
+    struct segment *seg = pls->segments[pls->cur_seq_no - pls->start_seq_no];   // @think3r  NOTE: segment 为一个 ts 的描述
 
     // broker prior HTTP options that should be consistent across requests
     av_dict_set(&opts, "user-agent", c->user_agent, 0);
@@ -997,7 +998,7 @@ static int open_input(HLSContext *c, struct playlist *pls)
            seg->url, seg->url_offset, pls->index);
 
     if (seg->key_type == KEY_NONE) {
-        ret = open_url(pls->parent->priv_data, &pls->input, seg->url, opts);
+        ret = open_url(pls->parent->priv_data, &pls->input, seg->url, opts);    // @think3r NOTE: 根据 ts-url 打开内部 `URLContext`
     } else if (seg->key_type == KEY_AES_128) {
 //         HLSContext *c = var->parent->priv_data;
         char iv[33], key[33], url[MAX_URL_SIZE];
@@ -1048,7 +1049,7 @@ static int open_input(HLSContext *c, struct playlist *pls)
      * should already be where want it to, but this allows e.g. local testing
      * without a HTTP server. */
     if (ret == 0 && seg->key_type == KEY_NONE) {
-        int seekret = ffurl_seek(pls->input, seg->url_offset, SEEK_SET);
+        int seekret = ffurl_seek(pls->input, seg->url_offset, SEEK_SET);        // @think3r NOTE: `http_seek`, 读取数据 ???
         if (seekret < 0) {
             av_log(pls->parent, AV_LOG_ERROR, "Unable to seek to offset %"PRId64" of HLS segment '%s'\n", seg->url_offset, seg->url);
             ret = seekret;
@@ -1328,10 +1329,10 @@ static int save_avio_options(AVFormatContext *s)
     return ret;
 }
 
-static int hls_read_header(AVFormatContext *s)
+static int hls_read_header(AVFormatContext *s)  // @think3r 是最外部的 `AVFormatContext
 {
     URLContext *u = (s->flags & AVFMT_FLAG_CUSTOM_IO) ? NULL : s->pb->opaque;
-    HLSContext *c = s->priv_data;
+    HLSContext *c = s->priv_data;       // @think3r NOTE: 内部的 HLSContext
     int ret = 0, i, j, stream_offset = 0;
 
     c->interrupt_callback = &s->interrupt_callback;
@@ -1352,7 +1353,7 @@ static int hls_read_header(AVFormatContext *s)
         update_options(&c->headers, "headers", u->priv_data);
     }
 
-    if ((ret = parse_playlist(c, s->filename, NULL, s->pb)) < 0)
+    if ((ret = parse_playlist(c, s->filename, NULL, s->pb)) < 0)    // @think3r 解析 m3u8 文件
         goto fail;
 
     if ((ret = save_avio_options(s)) < 0)
@@ -1404,7 +1405,7 @@ static int hls_read_header(AVFormatContext *s)
     }
 
     /* Open the demuxer for each playlist */
-    for (i = 0; i < c->n_playlists; i++) {
+    for (i = 0; i < c->n_playlists; i++) {          // @think3r NOTE: =====> 下载 ts, 并探测格式, 解析 packet ?
         struct playlist *pls = c->playlists[i];
         AVInputFormat *in_fmt = NULL;
 
@@ -1429,10 +1430,10 @@ static int hls_read_header(AVFormatContext *s)
             goto fail;
         }
         ffio_init_context(&pls->pb, pls->read_buffer, INITIAL_BUFFER_SIZE, 0, pls,
-                          read_data, NULL, NULL);
+                          read_data, NULL, NULL);  // @think3r NOTE: url 为对应的 ts 地址, E.g. : http://xxxx.ts, `pls->pb` 则存储了下载的数据, 用于后续的封装格式 probe
         pls->pb.seekable = 0;
         ret = av_probe_input_buffer(&pls->pb, &in_fmt, pls->segments[0]->url,
-                                    NULL, 0, 0);
+                                    NULL, 0, 0);  // @think3r NOTE: 对下载后的 ts 数据进行 probe, 存储于内部 `AVInputFormat in_fmt` 来进行, in_fmt 通常为 `ff_mpegts_demuxer`
         if (ret < 0) {
             /* Free the ctx - it isn't initialized properly at this point,
              * so avformat_close_input shouldn't be called. If
@@ -1449,7 +1450,7 @@ static int hls_read_header(AVFormatContext *s)
         if ((ret = ff_copy_whitelists(pls->ctx, s)) < 0)
             goto fail;
 
-        // @think3r NOTE: 此处是内部的格式解析, 外部 AVInputFormat (pls->parent->iformat) 为 hls, 内部 AVInputFormat (pls->ctx->iformat)则为 mpegts
+        // @think3r TODO: 优化此处打印  NOTE: 此处是内部的格式解析 1. in_fmt 上方已进行了 probe, 是有值的. 2. 外部 AVInputFormat (pls->parent->iformat) 为 hls, 内部 AVInputFormat (pls->ctx->iformat)则为 mpegts
         ret = avformat_open_input(&pls->ctx, pls->segments[0]->url, in_fmt, NULL);
         if (ret < 0)
             goto fail;
@@ -1462,7 +1463,7 @@ static int hls_read_header(AVFormatContext *s)
         }
 
         pls->ctx->ctx_flags &= ~AVFMTCTX_NOHEADER;
-        ret = avformat_find_stream_info(pls->ctx, NULL);    // @think3r 填充当前 playlit 的 pls->ctx 信息
+        ret = avformat_find_stream_info(pls->ctx, NULL);    // @think3r 填充当前内部 playlit 的 pls->ctx 信息
         if (ret < 0)
             goto fail;
 
@@ -1471,7 +1472,7 @@ static int hls_read_header(AVFormatContext *s)
 
         /* Create new AVStreams for each stream in this playlist */
         for (j = 0; j < pls->ctx->nb_streams; j++) {
-            AVStream *st = avformat_new_stream(s, NULL);    // @think3r NOTE: 新建空 `AVStream`, 并使得 `s->nb_streams++`
+            AVStream *st = avformat_new_stream(s, NULL);    // @think3r NOTE: 新建空 `AVStream`, 并使得 `s->nb_streams++`, 此处的 st 指向的是最外部的!
             AVStream *ist = pls->ctx->streams[j];
             if (!st) {
                 ret = AVERROR(ENOMEM);
@@ -1479,7 +1480,7 @@ static int hls_read_header(AVFormatContext *s)
             }
             st->id = i;
 
-            // @think3r 将内部 ts 解析之后的 codec 信息拷贝至外部 `st->codec`
+            // @think3r NOTE: 将内部 ts 解析之后的 codec 信息拷贝至外部 `st->codec`
             avcodec_copy_context(st->codec, pls->ctx->streams[j]->codec);
 
             if (pls->is_id3_timestamped) /* custom timestamps via id3 */
@@ -1628,7 +1629,7 @@ static int hls_read_packet(AVFormatContext *s, AVPacket *pkt)
             while (1) {
                 int64_t ts_diff;
                 AVRational tb;
-                ret = av_read_frame(pls->ctx, &pls->pkt);
+                ret = av_read_frame(pls->ctx, &pls->pkt);           // @think3r `NOTE: av_read_frame()` 的第二层调用
                 if (ret < 0) {
                     if (!avio_feof(&pls->pb) && ret != AVERROR_EOF)
                         return ret;
@@ -1799,7 +1800,7 @@ static int hls_read_seek(AVFormatContext *s, int stream_index,
     return 0;
 }
 
-static int hls_probe(AVProbeData *p)
+static int hls_probe(AVProbeData *p)    // @think3r NOTE: 只用解析 m3u8 的头部即可确认是否是 ffmpeg 的协议.
 {
     /* Require #EXTM3U at the start, and either one of the ones below
      * somewhere for a proper match. */

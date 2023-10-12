@@ -292,7 +292,7 @@ int ffurl_alloc(URLContext **puc, const char *filename, int flags,
 int ffurl_open(URLContext **puc, const char *filename, int flags,
                const AVIOInterruptCB *int_cb, AVDictionary **options)
 {
-    int ret = ffurl_alloc(puc, filename, flags, int_cb);
+    int ret = ffurl_alloc(puc, filename, flags, int_cb);        // @think3r 当是网络协议时, 找到的是最开头的协议, E.g. : http/https
     if (ret < 0)
         return ret;
     if (options && (*puc)->prot->priv_data_class &&
@@ -300,7 +300,7 @@ int ffurl_open(URLContext **puc, const char *filename, int flags,
         goto fail;
     if ((ret = av_opt_set_dict(*puc, options)) < 0)
         goto fail;
-    ret = ffurl_connect(*puc, options);
+    ret = ffurl_connect(*puc, options);                 // @think3r NOTE: connect 内部可能还会创建其它协议, E.g. : HTTP --> TCP
     if (!ret)
         return 0;
 fail:

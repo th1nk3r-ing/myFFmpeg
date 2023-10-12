@@ -56,7 +56,7 @@ typedef enum {
 
 typedef struct HTTPContext {
     const AVClass *class;
-    URLContext *hd;
+    URLContext *hd;                     // @think3r NOTE: Http 协议是建立在 TCP 协议基础之上的, 因此此处的 hd 多是 TCP 的协议
     unsigned char buffer[BUFFER_SIZE], *buf_ptr, *buf_end;
     int line_count;
     int http_code;

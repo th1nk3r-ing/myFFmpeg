@@ -453,7 +453,7 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
     av_strlcpy(s->filename, filename ? filename : "", sizeof(s->filename));
 
     /* Allocate private data. */
-    if (s->iformat->priv_data_size > 0) {
+    if (s->iformat->priv_data_size > 0) {   // @think3r NOTE: `AVInputFormat` 私有数据的申请与创建, E.g. : `ff_hls_demuxer` 协议就是 `HLSContext`
         if (!(s->priv_data = av_mallocz(s->iformat->priv_data_size))) {
             ret = AVERROR(ENOMEM);
             goto fail;

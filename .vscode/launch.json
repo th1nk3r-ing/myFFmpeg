@@ -39,7 +39,8 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/ffplay_g",
-                "args": ["SpaceX-Falcon-Heavy-Elon-Musk's-Engineering-Masterpiece-[sX1Y2JMK6g8].mp4"],
+                // "args": ["SpaceX-Falcon-Heavy-Elon-Musk's-Engineering-Masterpiece-[sX1Y2JMK6g8].mp4"],
+                "args" : ["http://videocdn.renrenjiang.cn/Act-ss-m3u8-sd/979859_1546052815274/979859_1546052815274.m3u8"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -47,17 +48,16 @@
             "linux": {
                 "MIMode": "gdb",
                 "miDebuggerPath": "/usr/bin/gdb",
-                "args": ["/home/th1nk3r/Movies/spaceX.mp4"],
+                // "args": ["/home/th1nk3r/Movies/spaceX.mp4"],
                 // "args": ["/home/th1nk3r/Movies/spaceX.ts"],
             },
             "osx": {
                 "MIMode": "lldb",
                 // "miDebuggerPath": "/usr/local/bin/gdb",
-                "args": ["/Users/think3r/Movies/1_video/out_mtk_stuck.ts"],
+                // "args": ["/Users/think3r/Movies/1_video/out_mtk_stuck.ts"],
                 // "args": ["/Users/think3r/Movies/1_video/flvHevc.flv"],
                 // "args": ["/Users/think3r/Movies/youtube/SpaceX-Falcon-Heavy-Elon-Musk's-Engineering-Masterpiece-[sX1Y2JMK6g8].mp4"],
                 // "args": ["/Users/think3r/Music/网易云音乐/横山菁児 - 英雄的黎明.mp3"],
-                // "args" : ["http://gslbmgspvod.miguvideo.com/depository_cidcobs_wxlz03/asset/zhengshi/5105/202/436/5105202436/media/5105202436_5189708740_594.mg001.mp4.m3u8?msisdn=d9b108264e41fe6e6575cc97a3bb442a&mdspid=&spid=800033&netType=4&sid=5700492994&pid=2028594089&timestamp=20231012140511&Channel_ID=0116_2600010720-99000-201600010010027&ProgramID=869946460&ParentNodeID=-99&assertID=5700492994&client_ip=2409:8770:af0:130::88&SecurityKey=20231012140511&promotionId=&mvid=5105202436&mcid=1000&mpid=130000172704&playurlVersion=WX-A1-6.9.3-RELEASE&userid=&jmhm=&videocodec=h265&bean=mgspad&puData=f3207326099f8de328778854158b0de3&ddCalcu=3fe3ed21009b708352164059898f787d8e23&jid=d9b108264e41fe6e6575cc97a3bb442a1697090710082V&is_advertise=0"]
             }
         },
         {
