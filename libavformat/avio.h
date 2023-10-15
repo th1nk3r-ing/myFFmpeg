@@ -131,7 +131,7 @@ typedef struct AVIOContext {
                                  no more data has been received yet. */
     void *opaque;           /**< A private pointer, passed to the read/write/seek/...
                                  functions. */
-    int (*read_packet)(void *opaque, uint8_t *buf, int buf_size);
+    int (*read_packet)(void *opaque, uint8_t *buf, int buf_size);               // @think3r NOTE: 通过本地/网络层读取 buf_size 的数据到 buf 中
     int (*write_packet)(void *opaque, uint8_t *buf, int buf_size);
     int64_t (*seek)(void *opaque, int64_t offset, int whence);
     int64_t pos;            /**< position in the file of the current buffer */

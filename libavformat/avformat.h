@@ -700,6 +700,9 @@ typedef struct AVInputFormat {
      * @return 0 on success, < 0 on error.
      *         When returning an error, pkt must not have been allocated
      *         or must be freed before returning
+     *     @think3r NOTE: 读取(本地/网络)数据, 按照 AVFormat 解析, 并对数据帧进行 parser(). 数据解析部分 :
+     *         本地文件 --> `read()` 系统调用函数
+     *         HLS 协议 : ts 分片的网络下载. 其 URLContext 为 `hls.c` 内部使用.
      */
     int (*read_packet)(struct AVFormatContext *, AVPacket *pkt);
 

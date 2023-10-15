@@ -429,7 +429,7 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
     if ((ret = av_opt_set_dict(s, &tmp)) < 0)
         goto fail;
 
-    if ((ret = init_input(s, filename, &tmp)) < 0)
+    if ((ret = init_input(s, filename, &tmp)) < 0)      // @think3r : NOTE: 内部包含大量操作....
         goto fail;
     s->probe_score = ret;
 
@@ -471,7 +471,7 @@ int avformat_open_input(AVFormatContext **ps, const char *filename,
         ff_id3v2_read(s, ID3v2_DEFAULT_MAGIC, &id3v2_extra_meta, 0);
 
     if (!(s->flags&AVFMT_FLAG_PRIV_OPT) && s->iformat->read_header)
-        if ((ret = s->iformat->read_header(s)) < 0)
+        if ((ret = s->iformat->read_header(s)) < 0)             // @think3r NOTE: read_header() 函数指针调用.
             goto fail;
 
     if (id3v2_extra_meta) {
@@ -1314,7 +1314,7 @@ static int64_t ts_to_samples(AVStream *st, int64_t ts)
     return av_rescale(ts, st->time_base.num * st->codec->sample_rate, st->time_base.den);
 }
 
-// TODO: FIXME: @think3r 此处的函数指针分析链 ............... avio_read() && ffurl_read(
+// TODO: @think3r TODO: FIXME:  avio_read() && ffurl_read() 此处逻辑梳理
 static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
 {
     int ret = 0, i, got_packet = 0;
@@ -1327,7 +1327,8 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
         AVPacket cur_pkt;
 
         /* read next packet */
-        ret = ff_read_packet(s, &cur_pkt);  // @think3r NOTE: 调用链 : iformat->read_packet() ---> avio_read() ---> AVIOContext->read_packet() ?
+        ret = ff_read_packet(s, &cur_pkt);  // @think3r NOTE: 调用链 : iformat->read_packet() --->      (xxxxx ---> av_read_frame() ---> read_frame_internal())  NOTE: 这部分可省略, 直接调用下方的链
+                                                //                                                ----> avio_read(AVIOContext*s) ---> AVIOContext->read_packet() ?
         if (ret < 0) {
             if (ret == AVERROR(EAGAIN))
                 return ret;

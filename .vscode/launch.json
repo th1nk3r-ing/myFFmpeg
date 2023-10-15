@@ -49,7 +49,6 @@
                 "MIMode": "gdb",
                 "miDebuggerPath": "/usr/bin/gdb",
                 // "args": ["/home/th1nk3r/Movies/spaceX.mp4"],
-                // "args": ["/home/th1nk3r/Movies/spaceX.ts"],
             },
             "osx": {
                 "MIMode": "lldb",

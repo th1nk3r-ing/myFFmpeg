@@ -1429,8 +1429,8 @@ static int hls_read_header(AVFormatContext *s)  // @think3r 是最外部的 `AVF
             pls->ctx = NULL;
             goto fail;
         }
-        ffio_init_context(&pls->pb, pls->read_buffer, INITIAL_BUFFER_SIZE, 0, pls,
-                          read_data, NULL, NULL);  // @think3r NOTE: url 为对应的 ts 地址, E.g. : http://xxxx.ts, `pls->pb` 则存储了下载的数据, 用于后续的封装格式 probe
+        ffio_init_context(&pls->pb, pls->read_buffer, INITIAL_BUFFER_SIZE, 0, pls, // @think3r NOTE: url 为对应的 ts 地址, E.g. : http://xxxx.ts, `pls->pb` 则存储了下载的数据, 用于后续的封装格式 probe;
+                          read_data, NULL, NULL);  // @think3r  NOTE: 内部的 `read_data()` 函数取代了`ffio_fdopen()` 中默认的 `ffurl_read()`, 对 TS 文件的下载进行了二次的封装, 但其内部最终调用链路还是 `read_data()` ---> `ffurl_read_xxx()` ----> 内部的 `URLContext->prot->url_read()` ---> `http_read()` ---> `tcp_read()`
         pls->pb.seekable = 0;
         ret = av_probe_input_buffer(&pls->pb, &in_fmt, pls->segments[0]->url,
                                     NULL, 0, 0);  // @think3r NOTE: 对下载后的 ts 数据进行 probe, 存储于内部 `AVInputFormat in_fmt` 来进行, in_fmt 通常为 `ff_mpegts_demuxer`

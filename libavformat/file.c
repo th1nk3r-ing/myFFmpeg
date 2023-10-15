@@ -107,7 +107,7 @@ static int file_read(URLContext *h, unsigned char *buf, int size)
     FileContext *c = h->priv_data;
     int r;
     size = FFMIN(size, c->blocksize);
-    r = read(c->fd, buf, size);
+    r = read(c->fd, buf, size);     // @think3r NOTE: 读取 size 大小的数据到 buf 中.
     return (-1 == r)?AVERROR(errno):r;
 }
 
