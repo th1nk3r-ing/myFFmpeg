@@ -94,7 +94,7 @@
 #define CABAC(h) (h)->pps.cabac
 #endif
 
-#define CHROMA(h)    ((h)->sps.chroma_format_idc)
+#define CHROMA(h)    ((h)->sps.chroma_format_idc)           // @think3r chroma_format_idc == 1 时为 YUV420, default
 #define CHROMA422(h) ((h)->sps.chroma_format_idc == 2)
 #define CHROMA444(h) ((h)->sps.chroma_format_idc == 3)
 
@@ -224,8 +224,8 @@ typedef struct SPS {
     int initial_cpb_removal_delay_length; ///< initial_cpb_removal_delay_length_minus1 + 1
     int cpb_removal_delay_length;         ///< cpb_removal_delay_length_minus1 + 1
     int dpb_output_delay_length;          ///< dpb_output_delay_length_minus1 + 1
-    int bit_depth_luma;                   ///< bit_depth_luma_minus8 + 8
-    int bit_depth_chroma;                 ///< bit_depth_chroma_minus8 + 8
+    int bit_depth_luma;                   ///< bit_depth_luma_minus8 + 8            // @think3r NOTE: 亮度位深
+    int bit_depth_chroma;                 ///< bit_depth_chroma_minus8 + 8          // @think3r NOTE:
     int residual_color_transform_flag;    ///< residual_colour_transform_flag
     int constraint_set_flags;             ///< constraint_set[0-3]_flag
     int new;                              ///< flag to keep track if the decoder context needs re-init due to changed SPS

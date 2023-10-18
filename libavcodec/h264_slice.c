@@ -865,6 +865,7 @@ static void init_scan_tables(H264Context *h)
     }
 }
 
+// @think3r 获取 YUV 格式, 最新版本的是 函数 `h264_parser.c` in `h264_parser.c`
 static enum AVPixelFormat get_pixel_format(H264Context *h, int force_callback)
 {
 #define HWACCEL_MAX (CONFIG_H264_DXVA2_HWACCEL + \
@@ -877,7 +878,7 @@ static enum AVPixelFormat get_pixel_format(H264Context *h, int force_callback)
     const enum AVPixelFormat *choices = pix_fmts;
     int i;
 
-    switch (h->sps.bit_depth_luma) {
+    switch (h->sps.bit_depth_luma) {        // @think3r NOTE: 根据位深, 亮度格式, 颜色空间等来决定 YUV 格式 ?
     case 9:
         if (CHROMA444(h)) {
             if (h->avctx->colorspace == AVCOL_SPC_RGB) {
@@ -960,7 +961,7 @@ static enum AVPixelFormat get_pixel_format(H264Context *h, int force_callback)
             else if (h->avctx->color_range == AVCOL_RANGE_JPEG)
                 *fmt++ = AV_PIX_FMT_YUVJ420P;
             else
-                *fmt++ = AV_PIX_FMT_YUV420P;
+                *fmt++ = AV_PIX_FMT_YUV420P;        // @think3r NOTE: YUV420 只有这一种 ????? 最新版本也只有这种 ????
         }
         break;
     default:
