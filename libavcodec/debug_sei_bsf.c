@@ -20,9 +20,12 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+#include <time.h>
 
 #include "bsf.h"
 #include "bsf_internal.h"
+#include "libavcodec/packet.h"
 
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
@@ -33,36 +36,102 @@ enum DumpFreq {
 };
 
 typedef struct DebugSeiContext {
-    uint64_t u64Cnt;
     const AVClass *class;
     AVPacket pkt;
     int freq;
+
+    uint64_t u64Cnt;
+    int32_t  needInitCtx;
+    char     sei_user_data[1024 * 12];
+    uint32_t sei_user_data_len;
+    char     infoData[1024];
+    FILE *   pOutFile;
 } DebugSeiContext;
 
 static int debug_sei_init(AVBSFContext *ctx)
 {
     DebugSeiContext *s = ctx->priv_data;
     s->u64Cnt = 0;
+    s->needInitCtx = 1;
 
     av_log(NULL, AV_LOG_INFO, "[%s %d] \n", __func__, __LINE__);
+
+    s->pOutFile = fopen("/tmp/seiOutput.txt", "wb+");
+    if (s->pOutFile == NULL) {
+        av_log(NULL, AV_LOG_ERROR, "[%s %d] error! open File failed!\n", __func__, __LINE__);
+        return -1;
+    }
+
     return 0;
 }
 
-static int debug_sei(AVBSFContext *ctx, AVPacket *out)
+static void debug_sei_close(AVBSFContext *ctx)
 {
     DebugSeiContext *s = ctx->priv_data;
-    AVPacket *inPkt = &s->pkt;
+    if (s && s->pOutFile) {
+        fclose(s->pOutFile);
+    }
+
+    return;
+}
+
+static int findSeiData(DebugSeiContext * pCtx, AVPacket *pkt)
+{
+    char * pData = pkt->data;
+    uint32_t startIdx = 0;
+    uint32_t endIdx = 0;
+    uint64_t pts = 0, dts = 0;
+
+    if (pkt->size <= 12) {
+        return 0;
+    }
+
+    memset((void *)pCtx->sei_user_data, 0x00, sizeof(pCtx->sei_user_data));
+
+    for (uint32_t idx = 0; idx < pkt->size; idx++) {
+        if (pData[idx] == 'm' && pData[idx + 1] == 'g' && pData[idx + 2] == '-' && pData[idx + 3] == 's') {
+            if (!startIdx) {
+                startIdx = idx;
+                startIdx += strlen("mg-sei-user-data");
+            }
+        }
+
+        if (pData[idx] == 't' && pData[idx + 1] == 'a' && pData[idx + 2] == '"' && pData[idx + 3] == '}') {
+            if (!endIdx) {
+                endIdx = idx + 4;
+            }
+        }
+    }
+
+    pCtx->sei_user_data_len = FFMIN(endIdx - startIdx, sizeof(pCtx->sei_user_data));
+    memcpy((void *)pCtx->sei_user_data, pData + startIdx, pCtx->sei_user_data_len);
+
+    pts = av_rescale_q(pkt->pts, pkt->time_base, av_make_q(1, 1000));
+    dts = av_rescale_q(pkt->dts, pkt->time_base, av_make_q(1, 1000));
+    snprintf(pCtx->infoData, sizeof(pCtx->infoData), "%" PRIu64 " dts/pts:[%" PRIu64 " - %" PRIu64  "]  ", pCtx->u64Cnt, pts, dts);
+
+    fwrite(pCtx->infoData, strlen(pCtx->infoData), 1, pCtx->pOutFile);
+    fwrite(pCtx->sei_user_data, pCtx->sei_user_data_len, 1, pCtx->pOutFile);
+    fwrite("\n", 1, 1, pCtx->pOutFile);
+
+    av_log(NULL, AV_LOG_VERBOSE, "[%s %d] len:[%d], %s\n", __func__, __LINE__, pCtx->sei_user_data_len, pCtx->sei_user_data);
+
+    return 0;
+}
+
+static int debug_sei(AVBSFContext *ctx, AVPacket *outPkt)
+{
+    DebugSeiContext * pBSFCtx = (DebugSeiContext *)ctx->priv_data;
+    AVPacket *inPkt = &pBSFCtx->pkt;
     int ret = 0;
 
     ret = ff_bsf_get_packet_ref(ctx, inPkt);
     if (ret < 0)
         return ret;
 
-    s->u64Cnt++;
+    pBSFCtx->u64Cnt++;
 
-    // ff_cbs_sei_find_message
-
-    if (s->u64Cnt % 100 == 0) {
+    if (pBSFCtx->u64Cnt % 100 == 0) {
         av_log(NULL, AV_LOG_DEBUG, "think3r --> dts/pts:[%" PRIu64 " - %" PRIu64  "], streanIdx:[%d]\n", inPkt->dts, inPkt->pts, inPkt->stream_index);
         if (inPkt->side_data_elems) {
             av_log(NULL, AV_LOG_INFO, "[%s %d] side_data_elems:[%d], type:[%d]\n", __func__, __LINE__, inPkt->side_data_elems, inPkt->side_data[0].type);
@@ -70,33 +139,18 @@ static int debug_sei(AVBSFContext *ctx, AVPacket *out)
         }
     }
 
-#if 1
-    if (ctx->par_in->extradata &&
-        (s->freq == DUMP_FREQ_ALL ||
-         (s->freq == DUMP_FREQ_KEYFRAME && inPkt->flags & AV_PKT_FLAG_KEY)) &&
-         (inPkt->size < ctx->par_in->extradata_size ||
-          memcmp(inPkt->data, ctx->par_in->extradata, ctx->par_in->extradata_size))) {
-        if (inPkt->size >= INT_MAX - ctx->par_in->extradata_size) {
-            ret = AVERROR(ERANGE);
-            goto fail;
-        }
+    findSeiData(pBSFCtx, inPkt);
 
-        ret = av_new_packet(out, inPkt->size + ctx->par_in->extradata_size);
-        if (ret < 0)
-            goto fail;
+    ret = av_new_packet(outPkt, inPkt->size);
+    if (ret < 0)
+        goto fail;
 
-        ret = av_packet_copy_props(out, inPkt);
-        if (ret < 0) {
-            av_packet_unref(out);
-            goto fail;
-        }
-
-        memcpy(out->data, ctx->par_in->extradata, ctx->par_in->extradata_size);
-        memcpy(out->data + ctx->par_in->extradata_size, inPkt->data, inPkt->size);
-    } else {
-        av_packet_move_ref(out, inPkt);
+    ret = av_packet_copy_props(outPkt, inPkt);
+    if (ret < 0) {
+        av_packet_unref(outPkt);
+        goto fail;
     }
-#endif
+    memcpy(outPkt->data, inPkt->data, inPkt->size);
 
 fail:
     av_packet_unref(inPkt);
@@ -129,4 +183,5 @@ const FFBitStreamFilter ff_debug_sei_bsf = {
     .priv_data_size = sizeof(DebugSeiContext),
     .init           = debug_sei_init,
     .filter         = debug_sei,
+    .close          = debug_sei_close,
 };

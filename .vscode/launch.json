@@ -40,7 +40,7 @@
                 "miDebuggerPath": "/usr/bin/gdb",
             },
             "osx": {
-                "args": ["-y", "-i", "/tmp/mr-flv-sei.ts", "-an", "-bsf:v", "-vcodec", "copy", "debug_sei", "/tmp/out.ts"],
+                "args": ["-y", "-i", "/tmp/mr-flv-sei.ts", "-an", "-vcodec", "copy", "-bsf:v",  "debug_sei", "/tmp/out.ts"],
                 "MIMode": "lldb",
             }
         },
