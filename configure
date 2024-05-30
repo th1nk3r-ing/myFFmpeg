@@ -3342,6 +3342,7 @@ mpeg2_metadata_bsf_select="cbs_mpeg2"
 trace_headers_bsf_select="cbs"
 vp9_metadata_bsf_select="cbs_vp9"
 vvc_metadata_bsf_select="cbs_h266"
+debug_sei_bsf_select="debug_sei"
 
 # external libraries
 aac_at_decoder_deps="audiotoolbox"

@@ -25,6 +25,26 @@
             }
         },
         {
+            "name": "ffmpeg_g bsfSei",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ffmpeg_g",
+            // "args": [" -y  -i  /tmp/mr-flv-sei.ts  -an  -bsf:v  debug_sei  /tmp/out.ts"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "linux": {
+                "args": ["-y", "-i", "/home/think3r/tmp/mr-flv-sei.ts", "-an", "-vcodec", "copy", "-bsf:v", "debug_sei", "/home/think3r/tmp/out.ts"],
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb",
+            },
+            "osx": {
+                "args": ["-y", "-i", "/tmp/mr-flv-sei.ts", "-an", "-bsf:v", "-vcodec", "copy", "debug_sei", "/tmp/out.ts"],
+                "MIMode": "lldb",
+            }
+        },
+        {
             "name": "ffplay",
             "type": "cppdbg",
             "request": "launch",
