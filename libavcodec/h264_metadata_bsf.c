@@ -19,6 +19,8 @@
 #include "libavutil/avstring.h"
 #include "libavutil/display.h"
 #include "libavutil/common.h"
+#include "libavutil/log.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
 #include "bsf.h"
@@ -31,6 +33,10 @@
 #include "h264_levels.h"
 #include "h2645data.h"
 #include "sei.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 enum {
     FLIP_HORIZONTAL = 1,
@@ -464,11 +470,41 @@ static int h264_metadata_handle_display_orientation(AVBSFContext *bsf,
     return 0;
 }
 
+// ref : [ffmpeg插入sei实践](https://wangtaot.github.io/2020/11/09/ffmpeg%E6%8F%92%E5%85%A5sei%E5%AE%9E%E8%B7%B5/)
+static void config_key_frm_uuid(AVPacket *pkt, H264MetadataContext *ctx)
+{
+    if (!pkt || !ctx) {
+        return;
+    }
+
+    int64_t curFrmPtsMs = (int64_t) (av_q2d(pkt->time_base) * pkt->pts * 1000.0f);
+    // int64_t curFrmDtsMs =  av_q2d(pkt->time_base) * pkt->dts * 1000.0f;
+    const char * pUtcStr_1 = "{\"uuid\":\"mgdl6304-9413-40587\",\"utc\":";
+    const char * pUtcStr_2 = ",\"user_data\":{\"23\":{\"createCode\":10100,\"linkId\":\"10100-1733369729992-578f\",\"timeStamp\":1733369729992}}}";
+    const size_t memSize = 320;
+    uint8_t * pSeiInfo = (uint8_t *) av_mallocz( memSize );
+    snprintf(pSeiInfo, memSize, "%s%" PRId64 "%s", pUtcStr_1, curFrmPtsMs + 1733450134808 + 80, pUtcStr_2);
+
+    SEIRawUserDataUnregistered  * pSeiData = &ctx->sei_user_data_payload;
+    snprintf(pSeiData->uuid_iso_iec_11578, sizeof(pSeiData->uuid_iso_iec_11578), "%s", "mg-sei-user-data");
+    pSeiData->uuid_iso_iec_11578[15] = 'a';
+    pSeiData->data = pSeiInfo;
+    pSeiData->data_length = strlen(pSeiInfo);
+
+    av_log(NULL, AV_LOG_INFO,"[%s %d] %s,\n", __func__, __LINE__, pSeiInfo);
+
+    return;
+}
+
+
+
 static int h264_metadata_update_fragment(AVBSFContext *bsf, AVPacket *pkt,
                                          CodedBitstreamFragment *au)
 {
     H264MetadataContext *ctx = bsf->priv_data;
-    int err, i, has_sps, seek_point;
+    int err, i, has_sps, has_idr = 0, seek_point;
+
+    // av_log(NULL, AV_LOG_ERROR,"[%s %d]\n", __func__, __LINE__);
 
     if (ctx->aud == BSF_ELEMENT_REMOVE) {
         for (i = au->nb_units - 1; i >= 0; i--) {
@@ -491,6 +527,9 @@ static int h264_metadata_update_fragment(AVBSFContext *bsf, AVPacket *pkt,
                 return err;
             has_sps = 1;
         }
+        if (au->units[i].type == H264_NAL_IDR_SLICE) {
+            has_idr = 1;
+        }
     }
 
     if (pkt) {
@@ -499,11 +538,18 @@ static int h264_metadata_update_fragment(AVBSFContext *bsf, AVPacket *pkt,
         // - It is the first packet in the stream.
         // - It contains an SPS, indicating that a sequence might start here.
         // - It is marked as containing a key frame.
-        seek_point = !ctx->done_first_au || has_sps ||
+        seek_point = !ctx->done_first_au || has_idr ||
             (pkt->flags & AV_PKT_FLAG_KEY);
     } else {
         seek_point = 0;
     }
+
+    if (pkt) {
+        av_log(NULL, AV_LOG_ERROR,"[%s %d] seekPoint:[%d], pkt->pts:[%lld -> %.3f],  dts:[%lld -> %.3f], isKeyFrm:[%d], hasSps:[%d]\n",
+        __func__, __LINE__, seek_point, pkt->pts, av_q2d(pkt->time_base) * pkt->pts,  pkt->dts, av_q2d(pkt->time_base) * pkt->dts, has_idr, has_sps);
+    }
+
+    config_key_frm_uuid(pkt, ctx);
 
     if (ctx->sei_user_data && seek_point) {
         err = ff_cbs_sei_add_message(ctx->common.output, au, 1,
